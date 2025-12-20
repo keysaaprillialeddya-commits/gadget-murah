@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Category; // <--- WAJIB ADA
 
 class CategorySeeder extends Seeder
 {
-     public function run(): void
+    public function run(): void
     {
         $categories = [
             [
@@ -49,7 +49,11 @@ class CategorySeeder extends Seeder
         ];
 
         foreach ($categories as $category) {
-            Category::create($category);
+            // Menggunakan updateOrCreate agar tidak duplikat jika seeder dijalankan ulang
+            Category::updateOrCreate(
+                ['slug' => $category['slug']], 
+                $category
+            );
         }
 
         $this->command->info('✅ Categories seeded successfully!');

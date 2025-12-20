@@ -1,8 +1,3 @@
-{{-- ================================================
-     FILE: resources/views/layouts/app.blade.php
-     FUNGSI: Master layout untuk halaman customer/publik
-     ================================================ --}}
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -33,13 +28,13 @@
     {{-- ============================================
          NAVBAR
          ============================================ --}}
-    @include('partials.navbar')
+    @include('profile.partials.navbar')
 
     {{-- ============================================
          FLASH MESSAGES
          ============================================ --}}
     <div class="container mt-3">
-        @include('partials.flash-messages')
+        @include('profile.partials.flash-messages')
     </div>
 
     {{-- ============================================
@@ -52,7 +47,7 @@
     {{-- ============================================
          FOOTER
          ============================================ --}}
-    @include('partials.footer')
+    @include('profile.partials.footer')
 
     {{-- Stack untuk JS tambahan per halaman --}}
     @stack('scripts')

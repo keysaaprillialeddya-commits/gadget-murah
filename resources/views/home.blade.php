@@ -3,7 +3,7 @@
      FUNGSI: Halaman utama website
      ================================================ --}}
 
-@extends('layouts.app')
+@extends('components.app')
 
 @section('title', 'Beranda')
 
