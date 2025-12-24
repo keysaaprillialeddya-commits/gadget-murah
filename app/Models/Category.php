@@ -54,8 +54,8 @@ class Category extends Model
     public function activeProducts(): HasMany
     {
         return $this->hasMany(Product::class)
-                    ->where('is_active', true)
-                    ->where('stock', '>', 0);
+            ->where('is_active', true)
+            ->where('stock', '>', 0);
     }
 
     // ==================== SCOPES ====================
@@ -96,7 +96,7 @@ class Category extends Model
             return asset('storage/' . $this->image);
         }
         // Jika tidak, tampilkan placeholder
-        return asset('images/placeholder-category.jpg');
+        return asset('images/images.jpg');
     }
 
     /**

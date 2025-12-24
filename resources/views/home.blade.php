@@ -9,7 +9,7 @@
 
 @section('content')
     {{-- Hero Section --}}
-    <section class="bg-primary text-white py-5">
+    <section class="hero-gradient text-white py-5">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6">
@@ -25,7 +25,7 @@
                     </a>
                 </div>
                 <div class="col-lg-6 d-none d-lg-block text-center">
-                    <img src="{{ asset('images/hero-shopping.svg') }}"
+                    <img src="{{ asset('https://res.cloudinary.com/dk0z4ums3/image/upload/v1661753020/attached_image/inilah-cara-merawat-anak-kucing-yang-tepat.jpg') }}"
                          alt="Shopping" class="img-fluid" style="max-height: 400px;">
                 </div>
             </div>

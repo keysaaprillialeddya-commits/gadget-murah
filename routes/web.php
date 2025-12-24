@@ -10,6 +10,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -29,6 +30,26 @@ Route::get('/products', [CatalogController::class, 'index'])->name('catalog.inde
 Route::get('/products/{slug}', [CatalogController::class, 'show'])->name('catalog.show');
 
 
+Route::controller(GoogleController::class)->group(function () {
+    // ================================================
+    // ROUTE 1: REDIRECT KE GOOGLE
+    // ================================================
+    // URL: /auth/google
+    // Dipanggil saat user klik tombol "Login dengan Google"
+    // ================================================
+    Route::get('/auth/google', 'redirect')
+        ->name('auth.google');
+
+    // ================================================
+    // ROUTE 2: CALLBACK DARI GOOGLE
+    // ================================================
+    // URL: /auth/google/callback
+    // Dipanggil oleh Google setelah user klik "Allow"
+    // URL ini HARUS sama dengan yang didaftarkan di Google Console!
+    // ================================================
+    Route::get('/auth/google/callback', 'callback')
+        ->name('auth.google.callback');
+});
 // ================================================
 // HALAMAN YANG BUTUH LOGIN (Customer)
 // ================================================
@@ -100,3 +121,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Route tambahan untuk AJAX Image Handling (jika diperlukan)
     // ...
 });
+
+Route::middleware('auth')->group(function() {
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/toggle/{product}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+});
+

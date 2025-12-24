@@ -9,9 +9,9 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up()
-{
-    Schema::create('wishlists', function (Blueprint $table) {
+    public function up(): void
+    {
+       Schema::create('wishlists', function (Blueprint $table) {
         $table->id();
         // Foreign Key ke User
         $table->foreignId('user_id')->constrained()->onDelete('cascade');
@@ -22,7 +22,8 @@ return new class extends Migration
         // Mencegah duplikasi: User yang sama tidak bisa wishlist produk yang sama 2x
         $table->unique(['user_id', 'product_id']);
     });
-}
+    }
+
     /**
      * Reverse the migrations.
      */

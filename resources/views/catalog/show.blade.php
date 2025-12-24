@@ -3,7 +3,7 @@
      FUNGSI: Halaman detail produk
      ================================================ --}}
 
-@extends('layouts.app')
+@extends('components.app')
 
 @section('title', $product->name)
 

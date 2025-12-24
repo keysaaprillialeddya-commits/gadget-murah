@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('components.app')
 
 @section('title', 'Katalog Produk')
 
