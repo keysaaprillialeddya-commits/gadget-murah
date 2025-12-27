@@ -21,6 +21,11 @@
     {{-- Vite CSS --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- ... meta tags ... -->
+
+    @vite(['resources/css/app.css', 'resources/js/app.js']) {{-- Stack untuk
+    script tambahan dari child view --}} @stack('scripts')
+
     {{-- Stack untuk CSS tambahan per halaman --}}
     @stack('styles')
 </head>

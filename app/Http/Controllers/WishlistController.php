@@ -8,58 +8,95 @@ use Illuminate\Http\Request;
 
 class WishlistController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     /**
-     * Menampilkan halaman daftar wishlist user.
+     * Menampilkan halaman wishlist
      */
     public function index()
     {
-        // Ambil produk yang di-wishlist oleh user yang sedang login
-        $products = auth()->user()->wishlists()
-            ->with(['category', 'primaryImage']) // Eager load
-            ->latest('wishlists.created_at') // Urutkan dari yang baru di-wishlist
+        $products = auth()->user()
+            ->wishlistProducts()
+            ->with(['category', 'primaryImage'])
+            ->orderByPivot('created_at', 'desc')
             ->paginate(12);
 
         return view('wishlist.index', compact('products'));
     }
 
     /**
-     * Toggle wishlist (AJAX handler).
-     * Endpoint ini akan dipanggil oleh JavaScript.
-     *
-     * Konsep Toggle:
-     * - Jika user SUDAH like -> Hapus (Unlike/Detach)
-     * - Jika user BELUM like -> Tambah (Like/Attach)
+     * Toggle wishlist (tambah / hapus) - dipakai tombol hati di detail produk
      */
     public function toggle(Product $product)
     {
-        $user = auth()->user();
+        $user   = auth()->user();
+        $exists = $user->wishlistProducts()->where('product_id', $product->id)->exists();
 
-        // 1. Cek apakah produk ini ada di daftar wishlist user?
-        if ($user->hasInWishlist($product)) {
-            // Skenario: User mau UNLIKE
-            // detach() menghapus record di tabel pivot (wishlists)
-            // berdasarkan user_id dan product_id.
-            $user->wishlists()->detach($product->id);
-
-            $added = false; // Indikator untuk frontend: "Hapus warna merah"
-            $message = 'Produk dihapus dari wishlist.';
+        if ($exists) {
+            $user->wishlistProducts()->detach($product->id);
+            $message    = 'Produk dihapus dari wishlist 💔';
+            $inWishlist = false;
         } else {
-            // Skenario: User mau LIKE
-            // attach() menambahkan record baru di tabel pivot.
-            // Tidak perlu set user_id manual, Laravel otomatis tahu dari $user->wishlists()
-            $user->wishlists()->attach($product->id);
-
-            $added = true; // Indikator untuk frontend: "Ubah jadi merah"
-            $message = 'Produk ditambahkan ke wishlist!';
+            $user->wishlistProducts()->attach($product->id);
+            $message    = 'Produk ditambahkan ke wishlist ❤️';
+            $inWishlist = true;
         }
 
-        // Return JSON response yang ringan untuk JavaScript
-        // Kita kirim status "added" agar JS tahu harus ganti ikon love jadi merah atau abu-abu.
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success'     => true,
+                'message'     => $message,
+                'in_wishlist' => $inWishlist,
+                'count'       => $user->wishlistProducts()->count(),
+            ]);
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Hapus satu produk dari wishlist (tombol hati patah di halaman wishlist)
+     */
+    public function destroy(Product $product)
+    {
+        $user = auth()->user();
+
+        if ($user->wishlistProducts()->where('product_id', $product->id)->exists()) {
+            $user->wishlistProducts()->detach($product->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk dihapus dari wishlist 💔',
+                'count'   => $user->wishlistProducts()->count(),
+            ]);
+        }
+
         return response()->json([
-            'status' => 'success',
-            'added' => $added,
-            'message' => $message,
-            'count' => $user->wishlists()->count() // Kirim jumlah terbaru untuk update badge header
+            'success' => false,
+            'message' => 'Produk tidak ada di wishlist',
+        ], 404);
+    }
+
+    /**
+     * Hapus banyak produk sekaligus (bulk delete via checkbox)
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'product_ids'   => 'required|array',
+            'product_ids.*' => 'exists:products,id',
+        ]);
+
+        $user = auth()->user();
+        $user->wishlistProducts()->detach($request->product_ids);
+
+        return response()->json([
+            'success' => true,
+            'message' => count($request->product_ids) . ' produk dihapus dari wishlist',
+            'count'   => $user->wishlistProducts()->count(),
         ]);
     }
 }
