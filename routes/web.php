@@ -1,70 +1,56 @@
 <?php
-// ================================================
-// FILE: routes/web.php
-// FUNGSI: Definisi semua route website
-// ================================================
 
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\CatalogController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\WishlistController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\Auth\GoogleController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\ProductController as AdminProductController;
-use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
-use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use Illuminate\Support\Facades\Route;
-use App\Services\MidtransService;
-use App\Http\Controllers\PaymentController;
+use Illuminate\Support\Facades\Auth;
 
-
-
+// Import Controllers
+use App\Http\Controllers\{
+    HomeController,
+    CatalogController,
+    CartController,
+    CheckoutController,
+    WishlistController,
+    OrderController,
+    ProfileController,
+    PaymentController,
+    MidtransNotificationController
+};
+use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Admin\{
+    DashboardController,
+    ProductController as AdminProductController,
+    CategoryController as AdminCategoryController,
+    OrderController as AdminOrderController
+};
 
 // ================================================
-// HALAMAN PUBLIK (Tanpa Login)
+// PUBLIC ROUTES
 // ================================================
-
-// Homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
-
-// Katalog Produk
 Route::get('/products', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/products/{slug}', [CatalogController::class, 'show'])->name('catalog.show');
 
-
+// Google Auth
 Route::controller(GoogleController::class)->group(function () {
-    // ================================================
-    // ROUTE 1: REDIRECT KE GOOGLE
-    // ================================================
-    // URL: /auth/google
-    // Dipanggil saat user klik tombol "Login dengan Google"
-    // ================================================
-    Route::get('/auth/google', 'redirect')
-        ->name('auth.google');
-
-    // ================================================
-    // ROUTE 2: CALLBACK DARI GOOGLE
-    // ================================================
-    // URL: /auth/google/callback
-    // Dipanggil oleh Google setelah user klik "Allow"
-    // URL ini HARUS sama dengan yang didaftarkan di Google Console!
-    // ================================================
-    Route::get('/auth/google/callback', 'callback')
-        ->name('auth.google.callback');
+    Route::get('/auth/google', 'redirect')->name('auth.google');
+    Route::get('/auth/google/callback', 'callback')->name('auth.google.callback');
 });
-// ================================================
-// HALAMAN YANG BUTUH LOGIN (Customer)
-// ================================================
 
+// Midtrans Webhook (Wajib Public & Tanpa CSRF jika bisa)
+Route::post('midtrans/notification', [MidtransNotificationController::class, 'handle'])
+    ->name('midtrans.notification');
+
+// ================================================
+// CUSTOMER ROUTES (Auth Required)
+// ================================================
 Route::middleware('auth')->group(function () {
-    // Keranjang Belanja
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
-    Route::patch('/cart/{item}', [CartController::class, 'update'])->name('cart.update');
-    Route::delete('/cart/{item}', [CartController::class, 'remove'])->name('cart.remove');
+    // Cart
+    Route::prefix('cart')->name('cart.')->group(function() {
+        Route::get('/', [CartController::class, 'index'])->name('index');
+        Route::post('/add', [CartController::class, 'add'])->name('add');
+        Route::patch('/{item}', [CartController::class, 'update'])->name('update');
+        Route::delete('/{item}', [CartController::class, 'remove'])->name('remove');
+    });
 
     // Wishlist
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
@@ -74,130 +60,37 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
-    // Pesanan Saya
+    // Orders & Payment
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{order}/pay', [PaymentController::class, 'show'])->name('orders.pay');
+    Route::get('/orders/{order}/success', [PaymentController::class, 'success'])->name('orders.success');
+    Route::get('/orders/{order}/pending', [PaymentController::class, 'pending'])->name('orders.pending');
 
-    // Profil
+    // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
 // ================================================
-// HALAMAN ADMIN (Butuh Login + Role Admin)
+// ADMIN ROUTES (Auth & Admin Middleware)
 // ================================================
-
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Produk CRUD
+    
+    // CRUD Resources
     Route::resource('products', AdminProductController::class);
+    Route::resource('categories', AdminCategoryController::class)->except(['show']);
 
-    // Kategori CRUD
-    Route::resource('categories', AdminCategoryController::class);
-
-    // Manajemen Pesanan
+    // Order Management
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
-    Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    
+    // PERBAIKAN DI SINI: Nama rute disesuaikan dengan yang dipanggil di Blade
+    Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])
+        ->name('orders.update-status');
 });
 
-
-// ================================================
-// AUTH ROUTES (dari Laravel UI)
-// ================================================
+// Auth Default (Login, Register, Logout)
 Auth::routes();
-
-// routes/web.php
-
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\ProductController;
-
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Kategori
-    Route::resource('categories', CategoryController::class)->except(['show']); // Kategori biasanya tidak butuh show detail page
-
-    // Produk
-    Route::resource('products', ProductController::class);
-
-    // Route tambahan untuk AJAX Image Handling (jika diperlukan)
-    // ...
-});
-
-Route::middleware('auth')->group(function() {
-    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
-    Route::post('/wishlist/toggle/{product}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
-});
-
-Route::get('/debug-midtrans', function () {
-    // Cek apakah config terbaca
-    $config = [
-        'merchant_id'   => config('midtrans.merchant_id'),
-        'client_key'    => config('midtrans.client_key'),
-        'server_key'    => config('midtrans.server_key') ? '***SET***' : 'NOT SET',
-        'is_production' => config('midtrans.is_production'),
-    ];
-
-    // Test buat dummy token
-    try {
-        $service = new MidtransService();
-
-        // Buat dummy order untuk testing
-        $dummyOrder = new \App\Models\Order();
-        $dummyOrder->order_number = 'TEST-' . time();
-        $dummyOrder->total_amount = 10000;
-        $dummyOrder->shipping_cost = 0;
-        $dummyOrder->shipping_name = 'Test User';
-        $dummyOrder->shipping_phone = '08123456789';
-        $dummyOrder->shipping_address = 'Jl. Test No. 123';
-        $dummyOrder->user = (object) [
-            'name'  => 'Tester',
-            'email' => 'test@example.com',
-            'phone' => '08123456789',
-        ];
-        // Dummy items
-        $dummyOrder->items = collect([
-            (object) [
-                'product_id'   => 1,
-                'product_name' => 'Produk Test',
-                'price'        => 10000,
-                'quantity'     => 1,
-            ],
-        ]);
-
-        $token = $service->createSnapToken($dummyOrder);
-
-        return response()->json([
-            'status'  => 'SUCCESS',
-            'message' => 'Berhasil terhubung ke Midtrans!',
-            'config'  => $config,
-            'token'   => $token,
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'status'  => 'ERROR',
-            'message' => $e->getMessage(),
-            'config'  => $config,
-        ], 500);
-    }
-});
-
-
-// routes/web.php
-
-
-Route::middleware('auth')->group(function () {
-    // ... routes lainnya
-
-    // Payment Routes
-    Route::get('/orders/{order}/pay', [PaymentController::class, 'show'])
-        ->name('orders.pay');
-    Route::get('/orders/{order}/success', [PaymentController::class, 'success'])
-        ->name('orders.success');
-    Route::get('/orders/{order}/pending', [PaymentController::class, 'pending'])
-        ->name('orders.pending');
-});

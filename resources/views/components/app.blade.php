@@ -1,3 +1,8 @@
+{{-- ================================================
+     FILE: resources/views/layouts/app.blade.php
+     FUNGSI: Master layout untuk halaman customer/publik
+     ================================================ --}}
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -13,6 +18,9 @@
 
     {{-- Favicon --}}
     <link rel="icon" href="{{ asset('favicon.ico') }}">
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
 
     {{-- Google Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,42 +29,10 @@
     {{-- Vite CSS --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- ... meta tags ... -->
-
-    @vite(['resources/css/app.css', 'resources/js/app.js']) {{-- Stack untuk
-    script tambahan dari child view --}} @stack('scripts')
-
     {{-- Stack untuk CSS tambahan per halaman --}}
     @stack('styles')
 </head>
-<body>
-    {{-- ============================================
-         NAVBAR
-         ============================================ --}}
-    @include('profile.partials.navbar')
-
-    {{-- ============================================
-         FLASH MESSAGES
-         ============================================ --}}
-    <div class="container mt-3">
-        @include('profile.partials.flash-messages')
-    </div>
-
-    {{-- ============================================
-         MAIN CONTENT
-         ============================================ --}}
-    <main class="min-vh-100">
-        @yield('content')
-    </main>
-
-    {{-- ============================================
-         FOOTER
-         ============================================ --}}
-    @include('profile.partials.footer')
-
-    {{-- Stack untuk JS tambahan per halaman --}}
-    @stack('scripts')
-    <script>
+<script>
   /**
    * Fungsi AJAX untuk Toggle Wishlist
    * Menggunakan Fetch API (Modern JS) daripada jQuery.
@@ -68,7 +44,7 @@
       const token = document.querySelector('meta[name="csrf-token"]').content;
 
       // 2. Kirim Request ke Server
-      const response = await fetch(`/wishlist/toggle/${productId}`, {
+      const response = await fetch(/wishlist/toggle/${productId}, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -99,7 +75,7 @@
 
   function updateWishlistUI(productId, isAdded) {
     // Cari semua tombol wishlist untuk produk ini (bisa ada di card & detail page)
-    const buttons = document.querySelectorAll(`.wishlist-btn-${productId}`);
+    const buttons = document.querySelectorAll(.wishlist-btn-${productId});
 
     buttons.forEach((btn) => {
       const icon = btn.querySelector("i"); // Menggunakan tag <i> untuk Bootstrap Icons
@@ -123,6 +99,73 @@
       badge.style.display = count > 0 ? "inline-block" : "none";
     }
   }
+</script>
+<body>
+    {{-- ============================================
+         NAVBAR
+         ============================================ --}}
+    @include('profile.partials.navbar')
+
+    {{-- ============================================
+         FLASH MESSAGES
+         ============================================ --}}
+    <div class="container mt-3">
+        @include('profile.partials.flash-messages')
+    </div>
+
+    {{-- ============================================
+         MAIN CONTENT
+         ============================================ --}}
+    <main class="min-vh-100">
+        @yield('content')
+    </main>
+
+    {{-- ============================================
+         FOOTER
+         ============================================ --}}
+    @include('profile.partials.footer')
+
+    {{-- Stack untuk JS tambahan per halaman --}}
+    @stack('scripts')
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>AOS.init({once: true});</script>
+<script>
+function toggleWishlist(productId) {
+    // 1. Cek Login
+    @guest
+        window.location.href = "{{ route('login') }}";
+        return;
+    @endguest
+
+    // 2. Kirim Request ke Server
+    fetch("{{ route('wishlist.index') }}", {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ product_id: productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // 3. Update Icon Hati Secara Dinamis
+        const icon = document.getElementById('wishlist-icon-' + productId);
+        
+        if (data.status === 'added') {
+            icon.classList.remove('bi-heart', 'text-dark');
+            icon.classList.add('bi-heart-fill', 'text-danger');
+            // Opsional: Tambah Notifikasi Toast
+        } else {
+            icon.classList.remove('bi-heart-fill', 'text-danger');
+            icon.classList.add('bi-heart', 'text-dark');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Gagal memperbarui wishlist. Coba lagi.');
+    });
+}
 </script>
 </body>
 </html>
