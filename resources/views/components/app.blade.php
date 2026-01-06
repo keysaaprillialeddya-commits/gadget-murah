@@ -1,8 +1,3 @@
-{{-- ================================================
-     FILE: resources/views/layouts/app.blade.php
-     FUNGSI: Master layout untuk halaman customer/publik
-     ================================================ --}}
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -12,160 +7,117 @@
     {{-- CSRF Token untuk AJAX --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    {{-- SEO Meta Tags --}}
     <title>@yield('title', 'Toko Online') - {{ config('app.name') }}</title>
-    <meta name="description" content="@yield('meta_description', 'Toko online terpercaya dengan produk berkualitas')">
-
-    {{-- Favicon --}}
-    <link rel="icon" href="{{ asset('favicon.ico') }}">
     
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-
-
-    {{-- Google Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    {{-- Vite CSS --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    {{-- Stack untuk CSS tambahan per halaman --}}
     @stack('styles')
 </head>
-<script>
-  /**
-   * Fungsi AJAX untuk Toggle Wishlist
-   * Menggunakan Fetch API (Modern JS) daripada jQuery.
-   */
-  async function toggleWishlist(productId) {
-    try {
-      // 1. Ambil CSRF token dari meta tag HTML
-      // Laravale mewajibkan token ini untuk setiap request POST demi keamanan.
-      const token = document.querySelector('meta[name="csrf-token"]').content;
-
-      // 2. Kirim Request ke Server
-      const response = await fetch(/wishlist/toggle/${productId}, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-TOKEN": token, // Tempel token di header
-        },
-      });
-
-      // 3. Handle jika user belum login (Error 401 Unauthorized)
-      if (response.status === 401) {
-        window.location.href = "/login"; // Lempar ke halaman login
-        return;
-      }
-
-      // 4. Baca respon JSON dari server
-      const data = await response.json();
-
-      if (data.status === "success") {
-        // 5. Update UI tanpa reload halaman
-        updateWishlistUI(productId, data.added); // Ganti warna ikon
-        updateWishlistCounter(data.count); // Update angka di header
-        showToast(data.message); // Tampilkan notifikasi
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      showToast("Terjadi kesalahan sistem.", "error");
-    }
-  }
-
-  function updateWishlistUI(productId, isAdded) {
-    // Cari semua tombol wishlist untuk produk ini (bisa ada di card & detail page)
-    const buttons = document.querySelectorAll(.wishlist-btn-${productId});
-
-    buttons.forEach((btn) => {
-      const icon = btn.querySelector("i"); // Menggunakan tag <i> untuk Bootstrap Icons
-      if (isAdded) {
-        // Ubah jadi merah solid (Love penuh)
-        icon.classList.remove("bi-heart", "text-secondary");
-        icon.classList.add("bi-heart-fill", "text-danger");
-      } else {
-        // Ubah jadi abu-abu outline (Love kosong)
-        icon.classList.remove("bi-heart-fill", "text-danger");
-        icon.classList.add("bi-heart", "text-secondary");
-      }
-    });
-  }
-
-  function updateWishlistCounter(count) {
-    const badge = document.getElementById("wishlist-count");
-    if (badge) {
-      badge.innerText = count;
-      // Bootstrap badge display toggle logic
-      badge.style.display = count > 0 ? "inline-block" : "none";
-    }
-  }
-</script>
 <body>
-    {{-- ============================================
-         NAVBAR
-         ============================================ --}}
+    {{-- NAVBAR --}}
     @include('profile.partials.navbar')
 
-    {{-- ============================================
-         FLASH MESSAGES
-         ============================================ --}}
+    {{-- FLASH MESSAGES --}}
     <div class="container mt-3">
         @include('profile.partials.flash-messages')
     </div>
 
-    {{-- ============================================
-         MAIN CONTENT
-         ============================================ --}}
+    {{-- MAIN CONTENT --}}
     <main class="min-vh-100">
         @yield('content')
     </main>
 
-    {{-- ============================================
-         FOOTER
-         ============================================ --}}
+    {{-- FOOTER --}}
     @include('profile.partials.footer')
 
-    {{-- Stack untuk JS tambahan per halaman --}}
-    @stack('scripts')
+    {{-- SCRIPTS GLOBAL --}}
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-<script>AOS.init({once: true});</script>
-<script>
-function toggleWishlist(productId) {
-    // 1. Cek Login
-    @guest
-        window.location.href = "{{ route('login') }}";
-        return;
-    @endguest
+    <script>AOS.init({once: true});</script>
 
-    // 2. Kirim Request ke Server
-    fetch("{{ route('wishlist.index') }}", {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ product_id: productId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        // 3. Update Icon Hati Secara Dinamis
-        const icon = document.getElementById('wishlist-icon-' + productId);
-        
-        if (data.status === 'added') {
-            icon.classList.remove('bi-heart', 'text-dark');
-            icon.classList.add('bi-heart-fill', 'text-danger');
-            // Opsional: Tambah Notifikasi Toast
-        } else {
-            icon.classList.remove('bi-heart-fill', 'text-danger');
-            icon.classList.add('bi-heart', 'text-dark');
+    <script>
+    /**
+     * FUNGSI UNGGULAN: Toggle Wishlist (Hanya satu fungsi global)
+     */
+    async function toggleWishlist(productId) {
+        try {
+            // 1. Ambil Token CSRF
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+
+            // 2. Kirim Request ke Server (Gunakan URL yang sesuai dengan Route Anda)
+            const response = await fetch(`/wishlist/toggle/${productId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "X-CSRF-TOKEN": token,
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            // 3. Handle jika user belum login (Error 401)
+            if (response.status === 401) {
+                window.location.href = "{{ route('login') }}";
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.success || data.status === "success") {
+                // 4. Update UI Icon Secara Otomatis
+                updateWishlistUI(productId, data.in_wishlist || data.added);
+                
+                // 5. Update Angka Counter di Navbar (jika ada)
+                const badge = document.getElementById("wishlist-count");
+                if (badge && data.count !== undefined) {
+                    badge.innerText = data.count;
+                    badge.style.display = data.count > 0 ? "inline-block" : "none";
+                }
+            } else {
+                alert(data.message || "Gagal memperbarui wishlist.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Gagal memperbarui wishlist. Coba lagi.");
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Gagal memperbarui wishlist. Coba lagi.');
-    });
-}
-</script>
+    }
+
+    /**
+     * Helper untuk mengubah warna icon hati
+     */
+    function updateWishlistUI(productId, isAdded) {
+        // Cari tombol berdasarkan class (mendukung banyak tombol di satu halaman)
+        const buttons = document.querySelectorAll(`.wishlist-btn-${productId}`);
+        const singleIcon = document.getElementById('wishlist-icon-' + productId);
+
+        // Jika menggunakan sistem Class
+        buttons.forEach((btn) => {
+            const icon = btn.querySelector("i");
+            if (isAdded) {
+                icon.classList.replace("bi-heart", "bi-heart-fill");
+                icon.classList.add("text-danger");
+                if(btn.innerText.includes("Simpan")) btn.innerHTML = '<i class="bi bi-heart-fill me-2 text-danger"></i> Hapus dari Wishlist';
+            } else {
+                icon.classList.replace("bi-heart-fill", "bi-heart");
+                icon.classList.remove("text-danger");
+                if(btn.innerText.includes("Hapus")) btn.innerHTML = '<i class="bi bi-heart me-2"></i> Simpan ke Wishlist';
+            }
+        });
+
+        // Jika menggunakan sistem ID (Fallback)
+        if (singleIcon) {
+            if (isAdded) {
+                singleIcon.className = "bi bi-heart-fill text-danger";
+            } else {
+                singleIcon.className = "bi bi-heart text-dark";
+            }
+        }
+    }
+    </script>
+
+    @stack('scripts')
 </body>
 </html>

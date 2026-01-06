@@ -83,7 +83,7 @@ class User extends Authenticatable
         return $this->role === 'customer';
     }
 
-    public function hasInWishlist(Product $product): bool
+    public function hasInWishlist(Product $product): bool   
     {
         return $this->wishlists()
                     ->where('product_id', $product->id)
