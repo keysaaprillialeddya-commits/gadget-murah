@@ -25,7 +25,7 @@
                     </a>
                 </div>
                 <div class="col-lg-6 d-none d-lg-block text-center">
-                    <img src="{{ asset('https://res.cloudinary.com/dk0z4ums3/image/upload/v1661753020/attached_image/inilah-cara-merawat-anak-kucing-yang-tepat.jpg') }}"
+                    <img src="images/airpods2.jfif"
                          alt="Shopping" class="img-fluid" style="max-height: 400px;">
                 </div>
             </div>
