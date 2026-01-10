@@ -7,7 +7,7 @@
     <div class="container">
         {{-- Logo & Brand --}}
         <a class="navbar-brand " href="{{ route('home') }}">
-            <i class="bi bi-bag-heart-fill me-2"></i>
+             <img src="{{ asset('images/icon.jfif') }}" alt="Logo" width="40" height="40">
             TokoOnline
         </a>
 
