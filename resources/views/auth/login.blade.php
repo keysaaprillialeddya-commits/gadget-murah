@@ -1,6 +1,6 @@
 {{-- ======================================== FILE:
 resources/views/auth/login.blade.php FUNGSI: Halaman form login
-======================================== --}} @extends('components.app') {{-- ↑
+======================================== --}} @extends('layouts.app') {{-- ↑
 Menggunakan layout dari layouts/app.blade.php Halaman ini akan "masuk" ke bagian
 @yield('content') --}} @section('content') {{-- ↑ Mulai section yang akan
 ditampilkan di @yield('content') --}}

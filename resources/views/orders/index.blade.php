@@ -1,6 +1,6 @@
 {{-- resources/views/orders/index.blade.php --}}
 
-@extends('components.app')
+@extends('layouts.app')
 
 @section('title', 'Daftar Transaksi')
 

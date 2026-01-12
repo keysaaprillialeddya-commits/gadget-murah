@@ -3,7 +3,7 @@
      FITUR: Full Page (Slider + Category + Products)
      ================================================ --}}
 
-@extends('components.app')
+@extends('layouts.app')
 
 @section('title', 'Beranda - Toko Online')
 

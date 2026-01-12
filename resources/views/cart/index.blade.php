@@ -3,7 +3,7 @@
      FUNGSI: Halaman keranjang belanja
      ================================================ --}}
 
-@extends('components.app')
+@extends('layouts.app')
 
 @section('title', 'Keranjang Belanja')
 

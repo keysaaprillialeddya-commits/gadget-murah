@@ -36,7 +36,7 @@ Route::controller(GoogleController::class)->group(function () {
     Route::get('/auth/google/callback', 'callback')->name('auth.google.callback');
 });
 
-// Midtrans Webhook (Wajib Public & Tanpa CSRF jika bisa)
+// Midtrans Webhook (Public)
 Route::post('midtrans/notification', [MidtransNotificationController::class, 'handle'])
     ->name('midtrans.notification');
 
@@ -71,6 +71,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // PERBAIKAN: Tambahkan rute hapus avatar di sini
+    Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 });
 
 // ================================================
@@ -86,11 +89,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Order Management
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
-    
-    // PERBAIKAN DI SINI: Nama rute disesuaikan dengan yang dipanggil di Blade
-    Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])
-        ->name('orders.update-status');
+    Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.update-status');
 });
 
 // Auth Default (Login, Register, Logout)
 Auth::routes();
+
+
+
+Route::middleware('auth')->group(function () {
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])
+        ->name('profile.password.update');
+});

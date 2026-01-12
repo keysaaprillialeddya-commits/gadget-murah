@@ -1,6 +1,6 @@
 {{-- resources/views/wishlist/index.blade.php --}}
 
-@extends('components.app')
+@extends('layouts.app')
 
 @section('title', 'Wishlist Saya')
 
